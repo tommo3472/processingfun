@@ -1,23 +1,23 @@
 int positionOfDot;
 ArrayList<Dot> fallingDots;
+int topSpeed;
 
 class Dot{
   int x, y, speed;
   int[] direction = new int[2];
-  int[] colour = new int[3];
+  ArrayList<Integer> colour;
   
- Dot(int _x, int _y, int _directionX, int _directionY, int _speed, int[] rgb){
+ Dot(int _x, int _y, int _directionX, int _directionY, int _speed, ArrayList<Integer> _rgb){
    x = _x;
    y = _y;
    direction[0] = _directionX;
    direction[1] = _directionY;
    speed = _speed;
-   colour = rgb;
+   colour = _rgb;
  }
  
  void update(){
-  stroke(colour[0], colour[1], colour[2]);
-  println(colour);
+  stroke(colour.get(0), colour.get(1), colour.get(2));
   line(x, y, x+ (direction[0] * 5), y+ (direction[1] * 5)); 
  }
  
@@ -33,26 +33,26 @@ class Dot{
    if(x > width || x < 0 || y > height || y < 0){
      
      if(direction[0] == 1 && direction[1] == 1){
-       fallingDots.add(new Dot(x, y, -1, -1, speed, colour));
+       fallingDots.add(new Dot(x, y, -1, -1, speed, this.colour));
        
      } else if(direction[0] == 0 && direction[1] == 1) {
-       fallingDots.add(new Dot(x, y, 0, -1, speed, colour));
+       fallingDots.add(new Dot(x, y, 0, -1, speed, this.colour));
        
      } else if(direction[0] == -1 && direction[1] == 1) {
-       fallingDots.add(new Dot(x, y, 1, -1, speed, colour));
+       fallingDots.add(new Dot(x, y, 1, -1, speed, this.colour));
        
      } else if(direction[0] == 1 && direction[1] == -1) {
-       fallingDots.add(new Dot(x, y, -1, 1, speed, colour));
+       fallingDots.add(new Dot(x, y, -1, 1, speed, this.colour));
        
      } else if(direction[0] == 1 && direction[1] == 0) {
-       fallingDots.add(new Dot(x, y, -1, 0, speed, colour));
+       fallingDots.add(new Dot(x, y, -1, 0, speed, this.colour));
        
      } else if(direction[0] == -1 && direction[1] == -1) {
-       fallingDots.add(new Dot(x, y, 1, 1, speed, colour));
+       fallingDots.add(new Dot(x, y, 1, 1, speed, this.colour));
      } else if(direction[0] == -1 && direction[1] == 0) {
-       fallingDots.add(new Dot(x, y, 1, 0, speed, colour));
+       fallingDots.add(new Dot(x, y, 1, 0, speed, this.colour));
      } else if(direction[0] == 0 && direction[1] == -1) {
-       fallingDots.add(new Dot(x, y, 0, 1, speed, colour));
+       fallingDots.add(new Dot(x, y, 0, 1, speed, this.colour));
      }
      
      return true;
@@ -66,20 +66,28 @@ class Dot{
 
 void createDot(){
   int offset = 0;
-  int[] rgb = new int[3];
+  ArrayList<Integer> rgb = new ArrayList<Integer>() {
+    {
+    add(0);
+    add(0);
+    add(0);
+    }
+  };
+    
   for(int x = 0; x < width; x++){
     for(int y = 0; y < height; y++){
       
-      if((y + offset) % 75 == 0){
-        rgb[0] = 0;
-        rgb[1] = (int)random(0, 200);
-        rgb[2] = (int)random(255);
+      
+      if((y + offset) % 50 == 0){
+        rgb.set(0, 0);
+        rgb.set(1, (int)random(0, 200));
+        rgb.set(2, (int)random(255));
         println(rgb);
         
-        fallingDots.add(new Dot(x, y, -1, 0, 3, rgb));
-        fallingDots.add(new Dot(y, x, 0, -1, 3, rgb));
-        fallingDots.add(new Dot(x, y, 1, 0, 3, rgb));
-        fallingDots.add(new Dot(y, x, 0, 1, 3, rgb));
+        fallingDots.add(new Dot(x, y, -1, 0, (int)random(1,topSpeed), rgb));
+        fallingDots.add(new Dot(y, x, 0, -1, (int)random(1,topSpeed), rgb));
+        fallingDots.add(new Dot(x, y, 1, 0, (int)random(1,topSpeed), rgb));
+        fallingDots.add(new Dot(y, x, 0, 1, (int)random(1,topSpeed), rgb));
       }
     }
     
@@ -109,12 +117,13 @@ void updateDotList(){
 
 
 void setup(){
-  size(800, 800);
+  size(100, 100);
   
   fallingDots = new ArrayList<Dot>();
   noSmooth();
   positionOfDot = 1;
   createDot();
+  topSpeed = 10;
 }
 
 void draw(){
