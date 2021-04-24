@@ -64,57 +64,34 @@ void armY(int startX, int startY, int endX, int endY){
 
 void armD(int startX, int startY, int endX, int endY){
   // do a variance of the percentage where the three points of the line lay.
-  float len;
-  
-  if(startX > startY){
-    len = (endX - startX);
-  } else {
-    
-    len = (endY - startY);
-    
-  }
-  
-  float xIncrements = (endX - startX) * 0.35;
-  float yIncrements = (endY - startY) *0.2;
+  float len = distance(startX, startY, endX, endY);
 
-  
-  println(3 - -3);
-  
-  
+  float xIncrements = len / 3;
+  float yIncrements = len / 3;
+
   // x curve
   bezier(startX, startY, startX - xIncrements, startY + yIncrements, endX + xIncrements, endY - yIncrements, endX, endY);
-
-  
-  
 }
 
 
 void armsAsIs(){
   
+  stroke(0, 150, 150);
  //Up
- for(int i = 0; i<= 200; i+=50){
-   armD(100, 100, i, 0);
+ for(int y = 0; y<=height; y+= 50){
+    for(int x = 0; x<=width; x+= 50){
+      armD(count, count, x, y);
    
- }
-
- //DOwn
- for(int i = 0; i<= 200; i+=50){
-   
-   armD(100, 100, i, 200);
  }
  
- //Left
- for(int i = 0; i<= 200; i+=50){
-   
-   armD(100, 100, 0, i);
- }
+ count += speed;
  
- //right
- for(int i = 0; i<= 200; i+=50){
-   
-   armD(100, 100, 200, i);
+ if(count == height){
+   speed *= -1; 
+ } else if (count == 0){
+   speed *= -1;
  }
-
+ }
   
 }
 
@@ -134,10 +111,16 @@ void drawCurvyLine(float start, float stop, float s, int len) {
   }
 }
 
+float distance(float fx, float fy, float sx, float sy){
+   float d = sqrt(pow((sx - fx), 2) + pow((sy - fy), 2));
+   return d;
+  
+}
 
 
 int c = 5;
 int speed = 1;
+int count = 100;
 int down = 200;
 int up = 0;
 int finisher = 0;
@@ -173,7 +156,6 @@ void draw() {
   
   
   armsAsIs();
-  armD(100, 100, 200, 100);
 
 
   
@@ -184,12 +166,5 @@ void draw() {
     speed *= - 1;
   }
   
-  c = c + speed;
 
-  
-  if(c == 500){
-    speed *= -1;
-  } else if(c == 5){
-    speed *= -1;
-  }
 }
