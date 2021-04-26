@@ -1,46 +1,12 @@
 
-// We want three circles in a line and each cirlce will display its coords
-// at a location in an array
-
-
-
-/*
-
- create a function that can find the points in the lines of in the fibonacci spiral
- 
- 
- 
- xcounter = 1
- 
- 
- if XCounter < 2
- then positive x
- 
- if xCounter > 2
- then negative x
- 
- if xCounter > 4
- 
- if xCounter = 4
- then x = 1
- else x++
- 
- 
- same with y but start at 0 and inverse negative and positive
- 
- also if y < 1
- then positive y
- 
- 
- */
 
 /*
 
  6, 109, 139 - Main
  48, 145, 145
  52, 181, 170
- 111, 168, 75
- 236, 190, 20
+ 111, 168, 75 - green
+ 236, 190, 20 - yellow
  
  
  */
@@ -374,18 +340,31 @@ void Spacy() {
   secondSpacyCounter += 10;
 }
 
+void ring(){
+  float[] location;
+  float[] location2;
+  strokeWeight(10);
+  stroke(r[3], g[3], b[3]);
+  for(int i = 0; i < 360; i+=60){
+    location = findPointOnCircle(int(width/2), int(height/2), radians(spacyCounter + i), 240);
+    location2 = findPointOnCircle(int(width/2), int(height/2), radians(spacyCounter + i + 60), 240);
+    line(location[0], location[1], location2[0], location2[1]);
+  }
+  
+}
+
 
 
 void setup() {
   size(displayWidth, displayHeight );
   numberOfCircles(50, 25);
   crossHair = new CrossHair[2];
-  crossHair[0] =  new CrossHair(0, true, true, 0);
-  crossHair[1] = new CrossHair(45, false, false, 4);
+  crossHair[0] =  new CrossHair(0, false, true, 0);
+  crossHair[1] = new CrossHair(45, true, false, 4);
   f1 = 0;
   f2 = 1;
   orbit = 700;
-  speed = 7;
+  speed = 2;
   deg = 0;
   direction = 1;
   waitTime = 5;
@@ -409,4 +388,5 @@ void draw() {
   location();
   //autoSpeed();
   Spacy();
+  ring();
 }
