@@ -357,7 +357,7 @@ void ring(){
 
 void setup() {
   size(displayWidth, displayHeight );
-  numberOfCircles(50, 25);
+  numberOfCircles(300, 2);
   crossHair = new CrossHair[2];
   crossHair[0] =  new CrossHair(0, false, true, 0);
   crossHair[1] = new CrossHair(45, true, false, 4);
