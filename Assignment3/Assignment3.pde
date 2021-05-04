@@ -104,9 +104,10 @@ class Cannon {
    
    */
 
-  int mX, mY;
+  int mX, mY, currentAmmo, ammoClips;
   PVector location, mouseLocation;
   int[] size;
+  boolean alreadyShot;
 
 
   Cannon(int posX, int posY) {
@@ -114,6 +115,9 @@ class Cannon {
     location = new PVector(posX, posY);
     mouseLocation = new PVector(0, 0);
     size = new int[]{generalWidth, generalHeight};
+    alreadyShot = false;
+    currentAmmo = 10;
+    ammoClips = 2;
   }
 
 
@@ -121,12 +125,33 @@ class Cannon {
     getMousePos();
     drawCrossHair();
     drawCannon();
+    resetAmmo();
     checkForShot();
   }
 
   void drawCannon() {
     rectMode(CENTER);
     rect(location.x, location.y, size[0] * 2, size[1] * 2);
+  }
+  
+  void resetAmmo(){
+    /*
+    if currentAmmo is 0 and you have more than 0 backup ammoClips,
+    your currentAmmo will be refilled to max(10). ammoClips will also be
+    deincremented by 1
+    
+    return: void
+    
+    */
+   
+    if(currentAmmo == 0 && ammoClips > 0){
+     
+      currentAmmo = 10;
+      ammoClips -= 1;
+      
+    }
+    
+    
   }
 
 
@@ -142,13 +167,20 @@ class Cannon {
 
   void checkForShot() {
     /*
-    checks for a mouse button input.
-     then creates a new missile with the cannon location and the destination as the mouseX, and mouse<y locations.
+    checks for a mouse button input that is the left mouse button
+     then creates a new missile with the cannon location and the destination as the mouseX, and mouse<y locations
+     if no shot has been proccessed on this press.
      
      return: void
      */
-    if (mousePressed == true) {
+    if (mousePressed == true && alreadyShot == false && currentAmmo > 0) {
       missiles.add(new Missile(new PVector(location.x, location.y), new PVector(mouseLocation.x, mouseLocation.y), 3));
+      alreadyShot = true;
+      currentAmmo -= 1;
+    }
+    
+    if(mousePressed == false){
+      alreadyShot = false; 
     }
   }
 }
@@ -209,9 +241,6 @@ class Bomb {
   }
 
   void drawBounding() {
-
-    print(location);
-    println(boundingCircle[2]);
 
     fill(255, 0, 0, 10);
     ellipse(location.x, location.y, boundingCircle[2], boundingCircle[2]);
@@ -387,6 +416,8 @@ void destructionOfTargets() {
 
 
 
+
+
 Cannon player;
 int generalWidth, generalHeight;
 ArrayList<Missile> missiles;
@@ -419,8 +450,13 @@ void draw() {
   fill(255);
   rect(0, 0, width, height);
   rectMode(CENTER); // just for everything else, but should relocate this call.
+  
 
   player.update();
+  
+  println("Current Ammo:", player.currentAmmo, " ", "Remaining Clips ", player.ammoClips);
+
+  
 
   if (targets.size() > 0) {
     displayingTargets();
