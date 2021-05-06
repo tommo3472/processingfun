@@ -6,10 +6,9 @@
  
  
  Things to do:
- - detenate Missile when it has reach the intended destination.
- - create explosion animation.
- - create a hit box for that explosion.
- 
+ - Update explosion animation to be a little bit more retro.
+ - Finish Ammo GUI
+ - Create Ammo Clip GUI.
  
  
  */
@@ -28,6 +27,7 @@ class Missile {
    with its hit detection.
    
    
+   
    */
 
   PVector location, destination, direction;
@@ -36,13 +36,13 @@ class Missile {
 
   Missile(PVector _location, PVector _destination, int speed) {
     // Need the starting location and destination 
-    
+
     location = _location;
     destination = _destination;
     direction = new PVector(destination.x - location.x, 
-                            destination.y - location.y);
-                       
-    
+      destination.y - location.y);
+
+
     direction.normalize();
     direction.mult(speed);
     epsilon = 2;
@@ -67,8 +67,9 @@ class Missile {
   }
 
   void move() {
-
+    
     location.add(direction);
+    
   }
 
   void drawMissile() {
@@ -133,25 +134,22 @@ class Cannon {
     rectMode(CENTER);
     rect(location.x, location.y, size[0] * 2, size[1] * 2);
   }
-  
-  void resetAmmo(){
+
+  void resetAmmo() {
     /*
     if currentAmmo is 0 and you have more than 0 backup ammoClips,
-    your currentAmmo will be refilled to max(10). ammoClips will also be
-    deincremented by 1
-    
-    return: void
-    
-    */
-   
-    if(currentAmmo == 0 && ammoClips > 0){
+     your currentAmmo will be refilled to max(10). ammoClips will also be
+     deincremented by 1
      
+     return: void
+     
+     */
+
+    if (currentAmmo == 0 && ammoClips > 0) {
+
       currentAmmo = 10;
       ammoClips -= 1;
-      
     }
-    
-    
   }
 
 
@@ -178,9 +176,9 @@ class Cannon {
       alreadyShot = true;
       currentAmmo -= 1;
     }
-    
-    if(mousePressed == false){
-      alreadyShot = false; 
+
+    if (mousePressed == false) {
+      alreadyShot = false;
     }
   }
 }
@@ -215,7 +213,7 @@ class Bomb {
 
   void update() {
 
-    if (w % 2 == 0) {
+    if (w % 3 == 0) {
       drawExplosion();
     }
     updateBounding();
@@ -349,19 +347,19 @@ void displayingBomb() {
   for (int i = 0; i < bombs.size(); i++) {
 
     temp = bombs.get(i);
+    if (temp.aliveTime % 3 == 0) { // Check every third frame maybe delet on the main game.
+      for (int t = 0; t < targets.size(); t++) {
+        tempTarget = targets.get(t);
+        if (detectHit(temp.boundingCircle, tempTarget.boundingCircle)) {
 
-    for (int t = 0; t < targets.size(); t++) {
-      tempTarget = targets.get(t);
-
-      if (detectHit(temp.boundingCircle, tempTarget.boundingCircle)) {
-
-        tempTarget.hit = true;
+          tempTarget.hit = true;
+        }
       }
     }
-
     temp.update();
   }
 }
+
 
 void destructionOfBombs() {
   /*
@@ -413,7 +411,62 @@ void destructionOfTargets() {
 }
 
 
+void drawingAmmo(int xPos, int yPos, int ammo, int spacing) {
+  rect(150, 100, 200, 200); // Simple background for testing
 
+
+  int internalX, startLoop;
+
+  startLoop = 4;
+
+  //TODO
+  // Clips, might put in its own Function.
+
+
+  // draw ammo with a for loop?
+  /*
+  ------setup-----
+   *
+   * *
+   * * *
+   * * * *
+   
+   */
+  for (int stack_height = 0; stack_height < 4; stack_height++) {
+    internalX = xPos + ((spacing/2) * stack_height);
+    for (int i = 0; i < startLoop && ammo > 0; i++) {
+      rect(internalX, yPos, 10, 10);
+      internalX += spacing;
+      ammo -= 1;
+    }
+    yPos -= spacing;
+    startLoop -= 1;
+  }
+}
+
+void drawingClips(int xPos, int yPos, int clips, int spacing) {
+
+  for (int i = 0; i < clips; i++) {
+    rect(xPos, yPos, 10, 10);
+    xPos += spacing;
+  }
+}
+
+boolean testLength(PVector One, PVector Two, int epsilon) {
+  /*
+  checks whether the PVectors are within a certain range and returns
+   true if so and false if not.
+   
+   return boolean;
+   */
+
+  if ( sqrt(pow(One.x - Two.x, 2)  + pow(One.y - Two.y, 2)) < epsilon) {
+
+    return true;
+  }
+
+  return false;
+}
 
 
 
@@ -443,6 +496,17 @@ void setup() {
   createTargets();
 }
 
+void resetPlayerAmmo() {
+  /*
+  resets the players ammo and clips at the end of a level
+   
+   return: void
+   
+   */
+  player.currentAmmo = 10;
+  player.ammoClips = 2;
+}
+
 
 void draw() {
 
@@ -450,13 +514,11 @@ void draw() {
   fill(255);
   rect(0, 0, width, height);
   rectMode(CENTER); // just for everything else, but should relocate this call.
-  
+
 
   player.update();
-  
-  println("Current Ammo:", player.currentAmmo, " ", "Remaining Clips ", player.ammoClips);
 
-  
+
 
   if (targets.size() > 0) {
     displayingTargets();
@@ -472,4 +534,7 @@ void draw() {
     displayingBomb();
     destructionOfBombs();
   }
+
+  drawingAmmo(100, 100, player.currentAmmo, 25);
+  drawingClips(100, 150, player.ammoClips, 25);
 }
