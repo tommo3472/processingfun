@@ -14,6 +14,14 @@
  */
 
 
+
+
+/*
+-------------------------------------------------------------------------
+                            Classes
+-------------------------------------------------------------------------
+*/
+
 class Missile {
 
 
@@ -45,7 +53,7 @@ class Missile {
 
     direction.normalize();
     direction.mult(speed);
-    epsilon = 2;
+    epsilon = 6;
     boom = false;
   }
 
@@ -172,7 +180,7 @@ class Cannon {
      return: void
      */
     if (mousePressed == true && alreadyShot == false && currentAmmo > 0) {
-      missiles.add(new Missile(new PVector(location.x, location.y), new PVector(mouseLocation.x, mouseLocation.y), 3));
+      missiles.add(new Missile(new PVector(location.x, location.y), new PVector(mouseLocation.x, mouseLocation.y), 6));
       alreadyShot = true;
       currentAmmo -= 1;
     }
@@ -291,6 +299,91 @@ class circleTarget {
   }
 }
 
+class BallisticMissile {
+  /*
+  - creates a missile at a random location on the very top of the screen.
+  - selects an angle of direction between 0, 55.(This is to  be changed to take into account the proximity
+  of the missile to the centre of the screen) 
+  - The missile is assigned a speed between 1,3.
+  - The path of the missile is calulated by the y pos and the angle to find the new x pos?(I think this is how this works)
+  - It then draws a line from the starting pos and the current one for its tail and with a different colour a point at the
+  current location for its head.
+  
+  
+  
+  */
+  float theta; //<>//
+  PVector missile_start_pos;
+  PVector missile_pos;
+  int missile_y_speed;
+  boolean direction, hit; // true = right, false = left;
+  int[] tail_colour, missile_colour;
+  float[] bounding_circle;
+
+  BallisticMissile() {
+    tail_colour =  new int[]{0, 0, 255};
+    bounding_circle = new float[]{0, 0, 10};
+    missile_colour = new int[]{255, 255, 0};
+    
+    theta = calulateAngles();
+    missile_start_pos = new PVector(random(20, width - 20), 0);
+    missile_pos = new PVector(missile_start_pos.x, missile_start_pos.y);
+    missile_y_speed =  ceil(random(0, 3));
+    hit = false;
+    
+    if(missile_start_pos.x < width/2){
+      direction = true;
+    } else {
+      direction = false;
+    }
+    
+    
+  }
+
+  void update() {
+    calc_pos();
+    
+    drawObject();
+    updateBox();
+    //boundingCircle();
+  }
+  
+  void updateBox(){
+    
+    bounding_circle[0] = missile_pos.x;
+    bounding_circle[1] = missile_pos.y;
+    
+  }
+
+  void drawObject() {
+    
+    
+    stroke(tail_colour[0], tail_colour[1], tail_colour[2]);
+    strokeWeight(3);
+    line(missile_start_pos.x, missile_start_pos.y, missile_pos.x, missile_pos.y);
+    stroke(missile_colour[0], missile_colour[1], missile_colour[2]);
+    point(missile_pos.x, missile_pos.y);
+    stroke(0);
+  }
+
+  /*void boundingCircle() {
+    noStroke();
+    fill(255, 0, 0, 50);
+    ellipse(missile_pos.x, missile_pos.y, diameter, diameter);
+  }*/
+
+  void calc_pos() {
+    
+    if(direction){
+      missile_pos.x += tan(radians(theta));
+    } else {
+      missile_pos.x -= tan(radians(theta));
+    }
+    missile_pos.y += missile_y_speed;
+    
+  }
+}
+
 boolean detectHit(float[] circle1, float[] circle2) {
 
   float dx = circle1[0] - circle2[0];
@@ -304,6 +397,12 @@ boolean detectHit(float[] circle1, float[] circle2) {
 
   return false;
 }
+
+/*
+-------------------------------------------------------------------------
+                   Drawing And Destruction of Objects
+-------------------------------------------------------------------------
+*/
 
 void displayingMissile() {
   Missile temp;
@@ -343,16 +442,18 @@ void displayingBomb() {
    return: void
    */
   Bomb temp;
-  circleTarget tempTarget;
+  BallisticMissile tempTarget;
   for (int i = 0; i < bombs.size(); i++) {
 
     temp = bombs.get(i);
     if (temp.aliveTime % 3 == 0) { // Check every third frame maybe delet on the main game.
-      for (int t = 0; t < targets.size(); t++) {
-        tempTarget = targets.get(t);
-        if (detectHit(temp.boundingCircle, tempTarget.boundingCircle)) {
+      for (int t = 0; t < ballisticMissiles.size(); t++) {
+        tempTarget = ballisticMissiles.get(t);
+        if (detectHit(temp.boundingCircle, tempTarget.bounding_circle)) {
 
           tempTarget.hit = true;
+          // Ballistic Missile Taken Out
+          addScore(100);
         }
       }
     }
@@ -387,25 +488,23 @@ void createTargets() {
   }
 }
 
-void displayingTargets() {
-
-  circleTarget temp;
-
-  for (int i = 0; i < targets.size(); i++) {
-
-    temp = targets.get(i);
+void displayingBallisticMissiles(){
+  BallisticMissile temp;
+  for(int i = 0; i< ballisticMissiles.size(); i++){
+    temp = ballisticMissiles.get(i);
     temp.update();
+    println(temp.hit);
   }
 }
 
-void destructionOfTargets() {
+void destructionBallisticMissiles() {
 
-  circleTarget temp;
-  for (int i = targets.size()-1; i >= 0; i--) {
+  BallisticMissile temp;
+  for (int i = ballisticMissiles.size()-1; i >= 0; i--) {
 
-    temp = targets.get(i);
+    temp = ballisticMissiles.get(i);
     if (temp.hit == true) {
-      targets.remove(i);
+      ballisticMissiles.remove(i);
     }
   }
 }
@@ -469,6 +568,48 @@ boolean testLength(PVector One, PVector Two, int epsilon) {
 }
 
 
+void addMissile(){
+  for(int i = 0; i < 30; i++){
+    ballisticMissiles.add(new BallisticMissile());
+  }
+}
+
+
+float calulateAngles() {
+  // come back and try and achieve a different max angle depending on the closeness of the missile to the centre of the screen.
+  
+  float minAngle = 0;
+  float maxAngle = 55;
+
+  return random(minAngle, maxAngle);
+}
+
+
+/*
+-------------------------------------------------------------------------
+                            Score
+-------------------------------------------------------------------------
+*/
+
+
+void displayScore() {
+  fill(0);
+  textSize(24);
+  text(("Score: " + globalScore), 400, 50);
+}
+
+
+void addScore(int score) {
+  globalScore += score;
+}
+
+
+
+/*
+-------------------------------------------------------------------------
+                            Global Variables
+-------------------------------------------------------------------------
+*/
 
 
 Cannon player;
@@ -476,6 +617,9 @@ int generalWidth, generalHeight;
 ArrayList<Missile> missiles;
 ArrayList<Bomb> bombs;
 ArrayList<circleTarget> targets;
+ArrayList<BallisticMissile> ballisticMissiles;
+int globalScore = 0;
+
 
 
 
@@ -491,9 +635,10 @@ void setup() {
   missiles = new ArrayList<Missile>();
   bombs = new ArrayList<Bomb>();
   targets = new ArrayList<circleTarget>();
+  ballisticMissiles = new ArrayList<BallisticMissile>();
   noCursor();
-
-  createTargets();
+  
+  addMissile();
 }
 
 void resetPlayerAmmo() {
@@ -517,12 +662,13 @@ void draw() {
 
 
   player.update();
+  
 
 
 
-  if (targets.size() > 0) {
-    displayingTargets();
-    destructionOfTargets();
+  if (ballisticMissiles.size() > 0) {
+    displayingBallisticMissiles();
+    destructionBallisticMissiles();
   }
 
   if (missiles.size() > 0) {
@@ -537,4 +683,6 @@ void draw() {
 
   drawingAmmo(100, 100, player.currentAmmo, 25);
   drawingClips(100, 150, player.ammoClips, 25);
+  
+  displayScore();
 }
