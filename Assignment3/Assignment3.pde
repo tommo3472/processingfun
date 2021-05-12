@@ -5,10 +5,7 @@
  Things to do:
  - Add a Header
  - Comment The Code
- - Ballistic Missile hit detection 
  - Sounds
- - Advanced Mssiles
- 
  
  */
 
@@ -28,6 +25,31 @@
  */
 
 
+/*
+-------------------------------------------------------------------------
+ Global Variables
+ -------------------------------------------------------------------------
+ */
+
+
+Cannon player;
+int generalWidth, generalHeight;
+ArrayList<Missile> missiles;
+ArrayList<Bomb> bombs;
+ArrayList<circleTarget> targets;
+ArrayList<BallisticMissile> ballisticMissiles;
+ArrayList<SmartBallisticMissile> smartBallisticMissiles;
+ArrayList<City> cities;
+ArrayList<City> citiesClone;
+ArrayList<Score> midGameScore;
+int globalScore = 0;
+int levelTimer = 0;
+int state, Timer, amountOfMissiles, level, maxSpeed, bonusTimer;
+color[] colour = {0xFFa81ee1, 0xFF2f8cd0, 0xFF4cb390, 0xFFbcbb43, 0xFF82857a};
+float speedRange;
+int skyCol;
+int mountainCol;
+
 
 /*
 -------------------------------------------------------------------------
@@ -39,9 +61,18 @@
 class City {
   /*
   
-   when destoried change height variable and stop hit detection.
+   Class for the city object, draws the object to the screen.
+   Keeps track of if its hit and if it is hit plays an death animation.
    
-   
+   paramters:
+   - boundingBox: float list > for holding postion and size variables
+   for hit detection.
+   - position: PVector > for the x and y position on the screen.
+   - alive: boolean > a check for removing the object for the game.
+   - w: float > width of object
+   - h: float > height of object
+   - count: int > counter for the death animation
+   - size: int > size of the death animation
    
    */
 
@@ -49,51 +80,114 @@ class City {
   PVector position;
   boolean alive;
   float w, h;
+  int count, size;
 
   City(PVector _position, float _w, float _h) {
 
     position = _position;
     w = _w;
     h = _h;
-    boundingBox = new float[]{position.x, position.y, _w, _h};
+    boundingBox = new float[]{position.x-10, position.y-20, _w, _h};
     alive = true;
   }
 
 
   void update() {
-    // might have to get the variables from Dane's background.
+    /*
+    the update function for the city object. Draws the object and
+     death animation if alive = false.
+     
+     
+     return: void
+     */
 
     drawShape();
+    if (!alive) {
+      deathAnimation();
+    }
+
+    //drawBox();
+  }
+
+  void deathAnimation() {
+    /*
+    Draws the death animation over the city a box that is the same colour as
+     the background. Keeps track of how long the the city has been hit and
+     the size of the box is a third of that time. Creats a sliding effect.
+     
+     return: void
+     */
+
+    size = count/3;
+    fill(skyCol);
+    rectMode(CORNER);
+    rect(boundingBox[0], boundingBox[1]-20, boundingBox[2], size);
+    rectMode(CENTER);
+    count += 1;
+    if (count > 150) {
+      count = 150;
+    }
+  }
+
+  void reviveCity() {
+    /*
+    When called sets the city back alive and resets
+     the count and size of the death animation box.
+     
+     return: void
+     */
+    alive = true;
+    count = 0;
+    size = 0;
   }
 
   void drawShape() {
-
-    rect(position.x, position.y, w, h);
+    /*
+    Calls the drawCities function which acts as the sprite for
+     the City Object.
+     
+     return: void
+     */
+    drawCities(position.x, position.y);
   }
 
-  void resize(String command) {
-    // A function to resize the city depending on it been hit or respawning at the end
-    // of the level.
-    if (command == "respawn") {
-      h /= 4;
-    } else {
-      h *= 4;
-    }
+  void drawBox() {
+    /*
+    A test void for check where the boundingBox zone is
+     around the City.
+     
+     return: void
+     */
+    fill(255, 0, 0, 50);
+    rectMode(CORNER);
+    rect(boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3]);
+    rectMode(CENTER);
   }
 }
+
 
 class Missile {
 
 
   /*
   
-   Missile for constructing a player shoot Missile.
-   it will take a location and a destination PVector
+   Missile class for a projectile sent out by the player. When the player clicks
+   this will be spawned at the cannons location and have a destination of the
+   mouse at the time of the click. When the Missile gets to its location it
+   will despawn and spawn a Bomb.
    
-   when the Missile is at the destination it should blow up and create
-   a circle like explosion with mini squares that also continues to get large
-   with its hit detection.
+   parameters:
+   - location: PVector > Current location of the Missile
+   - destination: PVector > The destination of where the Missile is going to
+   go
+   - direction: PVector > A Normalized version of how far away the location.
+   is from the desitination
+   - epsilon: float > for checking the location and destination.
+   - boom: boolean > Check for when the missile has reached its location
+   and to be deleted while spawning a Bomb.
    
+   
+   arguments:
    
    
    */
@@ -110,7 +204,6 @@ class Missile {
     direction = new PVector(destination.x - location.x, 
       destination.y - location.y);
 
-
     direction.normalize();
     direction.mult(speed);
     epsilon = 6;
@@ -118,6 +211,13 @@ class Missile {
   }
 
   void update() {
+    /*
+    Called every frame that the object is in the game. Moves the 
+     Missile, draws the Sprite and checks to see if the Missile has
+     reached its location.
+     
+     return: void
+     */
 
     targetReachedDestinationCheck();
     move();
@@ -129,31 +229,45 @@ class Missile {
     /*
     test function for seeing where the missile should stop at.
      
-     return: void
-     */
+    return: void
+    */
 
     line(location.x, location.y, destination.x, destination.y);
   }
 
   void move() {
+    /*
+    Adds the direction to the Missile to move it in the direction
+    of the destination.
+    
+    return: void
+    */
 
     location.add(direction);
   }
 
   void drawMissile() {
+    /*
+    Draws the sprite for the Missile, giving it the colour
+    of the mountain background.
+    
+    return: void
+    */
+    strokeWeight(5);
+    stroke(0);
+    fill(mountainCol);
     rect(location.x, location.y, generalWidth, generalHeight);
+    strokeWeight(1);
   }
 
   void targetReachedDestinationCheck() {
     /*
     
-     see if the location x and y are close enough to the destination x and y.
-     call destruction of missile object with a varriable to check in another function
-     call creation of explosion.
-     calls explosion effect.
+     Checks if the location x and y are close enough to the destination x and y.
+     Sets boom to false so that the object can be removed. Creates a Bomb object
+     for the explosion.
      
      return: void
-     
      */
 
     if (abs(destination.x - location.x) <= epsilon && abs(destination.y - location.y) <= epsilon) {
@@ -163,25 +277,52 @@ class Missile {
   }
 }
 
-class Score{
+class Score {
+  /*
+  The Score class creates a object that allows for text to be shown on screen
+  for a duration of time. Used for when Ballistic Missiles are destoried.
   
+  paramters:
+    - remove: boolean > 
+    For checking if the object should be removed
+    - aliveTime: int > 
+    Keeps track of how long the object has been in the game for
+    - s: String >
+    The string that will be displayed for this object
+    - x: float >
+    x position in the game
+    - y: float >
+    y position in the game
+    - score: int >
+    The amount of score that has been awarded to be added to the string
+    
+  
+  
+  */
+
   boolean remove;
   int aliveTime;
   String s;
   float x, y;
   int score;
-  Score(String _s, int _score, float _x, float _y){
+  Score(String _s, int _score, float _x, float _y) {
     remove = false;
     s = _s;
     x = _x;
     y = _y;
     score = _score;
     aliveTime = 0;
-
   }
-  
-  void update(){
-    if(aliveTime == 100){
+
+  void update() {
+    /*
+    Checks whether the object has been around for 100 frame and if so
+    flags it for removable. Draws the object to the game and increments
+    the aliveTime.
+    
+    return: void
+    */
+    if (aliveTime == 100) {
       remove = true;
     }
     displayScore(s, score, x, y);
@@ -192,10 +333,8 @@ class Score{
 class Cannon {
 
   /*
-
-   handles the crosshair of the players mouse,
-   the logic to shoot the a Missile,
-   and remaining ammo.
+  The Cannon class handles the 
+  
    
    */
 
@@ -218,7 +357,7 @@ class Cannon {
 
   void update(boolean allowShot) {
     getMousePos();
-    
+
     drawCannon();
     resetAmmoWithClip();
     if (allowShot) {
@@ -228,8 +367,9 @@ class Cannon {
   }
 
   void drawCannon() {
+    fill(220, 220, 220);
     rectMode(CENTER);
-    rect(location.x, location.y, size[0] * 2, size[1] * 2);
+    rect(location.x, location.y, size[0] * 2, size[1]);
   }
 
   void resetAmmoWithClip() {
@@ -251,8 +391,8 @@ class Cannon {
 
 
   void drawCrossHair() {
-
-    line(mouseLocation.x - size[0], mouseLocation.y, mouseLocation.x + size[0], mouseLocation.y);
+    fill(220, 220, 220);
+    rect(mouseLocation.x, mouseLocation.y, 30, 4);
   }
 
   void getMousePos() {
@@ -312,6 +452,12 @@ class Bomb {
   }
 
   void update() {
+    /*
+    A check for 
+     
+     
+     return: void
+     */
 
     if (w % 3 == 0) {
       if (w % 15 == 0) {
@@ -443,14 +589,14 @@ class BallisticMissile {
   boolean direction, hit, spawn; // true = right, false = left;
   int[] tail_colour, missile_colour;
   PVector[] tail_pos;
-  float[] bounding_circle;
+  float[] boundingBox;
   int spawnTime; 
-  
+
 
 
   BallisticMissile(int _spawnTime, int _speed) {
     tail_colour =  new int[]{0, 0, 255};
-    bounding_circle = new float[]{0, 0, 10};
+    boundingBox = new float[]{0, 0, 10, 10};
     missile_colour = new int[]{0, 255, 255};
 
     theta = calulateAngles();
@@ -478,21 +624,19 @@ class BallisticMissile {
       deleteAtScreenLimit();
     }
   }
-  
-  void deleteAtScreenLimit(){
-   
-    if(missile_pos.y > height){
-     
+
+  void deleteAtScreenLimit() {
+
+    if (missile_pos.y > 910) {
+
       hit = true;
-      
     }
-    
   }
 
   void updateBox() {
 
-    bounding_circle[0] = missile_pos.x;
-    bounding_circle[1] = missile_pos.y;
+    boundingBox[0] = missile_pos.x;
+    boundingBox[1] = missile_pos.y;
   }
 
   void drawObject() {
@@ -500,10 +644,12 @@ class BallisticMissile {
 
     stroke(tail_colour[0], tail_colour[1], tail_colour[2]);
     strokeWeight(3);
-    if(direction){
-    line(missile_pos.x, missile_pos.y, missile_pos.x - (missile_speed.x * 300), missile_pos.y - (missile_speed.y * 300)); // Missile Tail.
+    if (direction) {
+      line(missile_pos.x, missile_pos.y, missile_pos.x - (missile_speed.x * 50), 
+        missile_pos.y - (missile_speed.y * 50)); // Missile Tail.
     } else {
-      line(missile_pos.x, missile_pos.y, missile_pos.x + (missile_speed.x * 300), missile_pos.y - (missile_speed.y * 300)); // Missile Tail.
+      line(missile_pos.x, missile_pos.y, missile_pos.x + (missile_speed.x * 50), 
+        missile_pos.y - (missile_speed.y * 50)); // Missile Tail.
     }
     stroke(missile_colour[0], missile_colour[1], missile_colour[2]);
     ellipse(missile_pos.x, missile_pos.y, 10, 10); // Missile Head
@@ -553,6 +699,8 @@ class SmartBallisticMissile extends BallisticMissile {
   void drawObject() {
 
     line(missile_pos.x -5, missile_pos.y, missile_pos.x + 5, missile_pos.y);
+    line(missile_pos.x -5, missile_pos.y, missile_pos.x + 5, missile_pos.y-1);
+    line(missile_pos.x -5, missile_pos.y, missile_pos.x + 5, missile_pos.y+1);
   }
 
 
@@ -576,7 +724,7 @@ class SmartBallisticMissile extends BallisticMissile {
 }
 
 
-boolean detectHit(float[] circle1, float[] circle2) {
+boolean detectHitCirlce(float[] circle1, float[] circle2) {
 
   float dx = circle1[0] - circle2[0];
   float dy = circle1[1] - circle2[1];
@@ -589,6 +737,97 @@ boolean detectHit(float[] circle1, float[] circle2) {
 
   return false;
 }
+
+boolean detectHitRect(float[] rect1, float[] rect2) {
+  if (rect1[0] < rect2[0] + rect2[2] &&
+    rect1[0] + rect1[2] > rect2[0] &&
+    rect1[1] < rect2[1] + rect2[3] &&
+    rect1[1] + rect1[3] > rect2[1]) {
+    // collision detected!
+    return true;
+  }
+
+  return false;
+}
+
+/*
+
+ -------------------------------------------------------------------------
+ Drawing background
+ -------------------------------------------------------------------------
+ 
+ */
+void drawSky(int skyHeight, int skyWidth) {
+  noStroke();
+  fill(skyCol);
+  rectMode(CORNER);
+  rect(0, 0, skyWidth, skyHeight);
+  rectMode(CENTER);
+}
+// Draws mountains with random colour values
+void drawMountains() {
+  rectMode(CORNER);
+  fill(mountainCol);
+  rect(0, height - 75, width, 75); // Floor base
+  rect(0, height - 100, 50, 75); // Left block
+  rect(width - 50, height - 100, 50, 75); // Right Block
+  rect(width / 2 - 80, height - 80, 200, 200); // Middle mountain
+  rect(width / 2 - 70, height - 84, 180, 180);
+  rect(width / 2 - 62, height - 88, 160, 160);
+  rect(width / 2 - 54, height - 92, 140, 140);
+  rect(width / 2 - 46, height - 96, 120, 120);
+  rect(width / 2 - 38, height - 100, 100, 100);
+  rect(width / 2 - 30, height - 104, 80, 80);
+  rect(width / 2 - 22, height - 108, 60, 60);
+  rect(width / 2 - 14, height - 112, 40, 40);
+  rect(width / 2 - 6, height - 116, 20, 20);
+  rectMode(CENTER);
+}
+// Draw cities, fixed colour
+void drawCities(float x, float y) {
+  rectMode(CORNER);
+  noStroke();
+  fill(255);
+  rect(x + 25, y -25, 10, 40);
+  fill(0);
+  rect(x + 27, y - 23, 2, 2);
+  rect(x + 31, y - 23, 2, 2);
+  rect(x + 27, y - 19, 2, 2);
+  rect(x + 31, y - 19, 2, 2);
+  rect(x + 27, y - 15, 2, 2);
+  rect(x + 31, y - 15, 2, 2);
+  rect(x + 27, y - 11, 2, 2);
+  rect(x + 31, y - 11, 2, 2);
+  rect(x + 27, y - 7, 2, 2);
+  rect(x + 31, y - 7, 2, 2);
+  rect(x + 27, y - 3, 2, 2);
+  rect(x + 31, y - 3, 2, 2);
+  rect(x + 27, y + 1, 2, 2);
+  rect(x + 31, y + 1, 2, 2);
+  fill(125);
+  rect(x + 5, y - 10, 2.5, 20);
+  fill(255);
+  rect(x, y, 20, 15);
+  fill(175);
+  rect(x - 5, y + 5, 30, 10);
+  fill(0);
+  rect(x + 3, y + 2.5, 2, 2);
+  rect(x + 8, y + 2.5, 2, 2);
+  rect(x + 13, y + 2.5, 2, 2);
+  rectMode(CENTER);
+}
+
+
+void drawBackground() {
+
+
+  drawSky(height, width);
+  drawMountains();
+}
+
+
+
+
 
 /*
 -------------------------------------------------------------------------
@@ -642,25 +881,23 @@ void displayingBomb() {
     if (temp.aliveTime % 3 == 0) { // Check every third frame maybe delet on the main game.
       for (int t = 0; t < ballisticMissiles.size(); t++) {
         tempTarget = ballisticMissiles.get(t);
-        if (detectHit(temp.boundingCircle, tempTarget.bounding_circle)) {
+        if (detectHitCirlce(temp.boundingCircle, tempTarget.boundingBox)) {
 
           tempTarget.hit = true;
           // Ballistic Missile Taken Out
           addScore(100);
           midGameScore.add(new Score("+", 100, tempTarget.missile_pos.x, tempTarget.missile_pos.y));
         }
-        
       }
-      for(int t = 0; t < smartBallisticMissiles.size(); t++){
+      for (int t = 0; t < smartBallisticMissiles.size(); t++) {
         tempSmartTarget = smartBallisticMissiles.get(t);
-        if (detectHit(temp.boundingCircle, tempSmartTarget.bounding_circle)){
-          
+        if (detectHitCirlce(temp.boundingCircle, tempSmartTarget.boundingBox)) {
+
           tempSmartTarget.hit = true;
           // Ballistic Missile Taken Out
           addScore(200);
           midGameScore.add(new Score("+", 200, tempSmartTarget.missile_pos.x, tempSmartTarget.missile_pos.y));
         }
-        
       }
     }
     temp.update();
@@ -696,10 +933,21 @@ void createTargets() {
 
 void displayingBallisticMissiles() {
   BallisticMissile temp;
+  City tempCity;
   for (int i = 0; i< ballisticMissiles.size(); i++) {
     temp = ballisticMissiles.get(i);
     if (levelTimer == temp.spawnTime) {
       temp.spawn = true;
+    }
+
+    for (int x = 0; x< cities.size(); x++) {
+      tempCity = cities.get(x);
+      if (tempCity.alive == true) {
+        if (detectHitRect(temp.boundingBox, tempCity.boundingBox)) {
+          temp.hit = true;
+          tempCity.alive = false;
+        }
+      }
     }
     temp.update();
   }
@@ -720,10 +968,21 @@ void destructionBallisticMissiles() {
 
 void displayingSmartBallisticMissiles() {
   SmartBallisticMissile temp;
+  City tempCity;
   for (int i = 0; i< smartBallisticMissiles.size(); i++) {
     temp = smartBallisticMissiles.get(i);
     if (levelTimer == temp.spawnTime) {
       temp.spawn = true;
+    }
+    for (int x = 0; x< cities.size(); x++) {
+
+      tempCity = cities.get(x);
+      if (tempCity.alive == true) {
+        if (detectHitRect(temp.boundingBox, tempCity.boundingBox)) {
+          temp.hit = true;
+          tempCity.alive = false;
+        }
+      }
     }
     temp.update();
   }
@@ -751,27 +1010,24 @@ void displayingCities() {
 }
 
 
-void handlingScore(){
- 
+void handlingScore() {
+
   Score temp;
-  for(int i = 0; i < midGameScore.size(); i++){
-   temp = midGameScore.get(i);
-   temp.update();
-    
-    
-  }
-  
-  for(int i = midGameScore.size() - 1; i > -1; i--){
+  for (int i = 0; i < midGameScore.size(); i++) {
     temp = midGameScore.get(i);
-    if(temp.remove){
-     midGameScore.remove(i); 
+    temp.update();
+  }
+
+  for (int i = midGameScore.size() - 1; i > -1; i--) {
+    temp = midGameScore.get(i);
+    if (temp.remove) {
+      midGameScore.remove(i);
     }
   }
 }
 
 
 void drawingAmmo(int xPos, int yPos, int ammo, int spacing) {
-  rect(150, 100, 200, 200); // Simple background for testing
 
 
   int internalX, startLoop;
@@ -791,6 +1047,8 @@ void drawingAmmo(int xPos, int yPos, int ammo, int spacing) {
    * * * *
    
    */
+
+  fill(skyCol);
   for (int stack_height = 0; stack_height < 4; stack_height++) {
     internalX = xPos + ((spacing/2) * stack_height);
     for (int i = 0; i < startLoop && ammo > 0; i++) {
@@ -798,7 +1056,7 @@ void drawingAmmo(int xPos, int yPos, int ammo, int spacing) {
       internalX += spacing;
       ammo -= 1;
     }
-    yPos -= spacing;
+    yPos -= spacing/2;
     startLoop -= 1;
   }
 }
@@ -866,11 +1124,42 @@ void populateCities() {
   // initializes all of the city objects at the start of the game.
   PVector tempLocation;
 
-  for (int i = 100; i < 700; i += 100) {
-    tempLocation = new PVector(i, 500);
-    cities.add(new City(tempLocation, 10, 30));
+  for (int i = 100; i < 950; i += 100) {
+    tempLocation = new PVector(i, 910);
+    cities.add(new City(tempLocation, 55, 35));
+    if (i == 300) {
+      i += 250;
+    }
   }
 }
+
+
+boolean gameOver() {
+  int counter = 0;
+  City temp;
+  for (int i = 0; i < cities.size(); i++) {
+
+    temp = cities.get(i);
+    if (temp.alive == true) {
+      counter += 1;
+    }
+  }
+
+  if (counter == 0) {
+    return true;
+  }
+
+  return false;
+}
+
+
+void reviveCity() {
+
+  int city = floor(random(5.1));
+  City temp = cities.get(city);
+  temp.alive = true;
+}
+
 
 
 
@@ -920,17 +1209,17 @@ void bounsScore() {
     return;
   }
 
-  for (int i = 0; i < citiesClone.size(); i++) {
-    City temp = citiesClone.get(i);
+  if (citiesClone.size() != 0) {
+    City temp = citiesClone.get(0);
     if (temp.alive == true) {
       // add score for city
       // display a score above the city
       // remove the city from the clone arrayList
       globalScore += 100;
-      displayScore("+", 100, temp.position.x, temp.position.y); 
-      delay(250);
+      displayScore("+", 100, temp.position.x, temp.position.y);
     }
-    citiesClone.remove(i);
+    delay(250);
+    citiesClone.remove(0);
     return;
   }
 
@@ -946,8 +1235,8 @@ void bounsScore() {
  Level Handling
  -------------------------------------------------------------------------
  States:
- - 0 : Fresh Game
- - 1 : Start Screen
+ - 0 : Start Screen
+ - 1 : Game Setup
  - 2 : Loading Level
  - 3 : Playing Level
  - 4 : Bonus Score
@@ -957,13 +1246,17 @@ void bounsScore() {
 
 
 void gamePathway() {
+  drawBackground();
+
+
 
   if (state == 0) {
-    freshGame();
-  } else if (state == 1) {
     startScreen();
+  } else if (state == 1) {
+    gameSetup();
   } else if (state == 2) {
     loadingLevel();
+    reviveCity();
   } else if (state == 3) {
     playingLevel();
   } else if (state == 4) {
@@ -975,9 +1268,6 @@ void gamePathway() {
 }
 
 
-void startScreen() {
-  // create some buttons to exit or to star a game.
-}
 
 void loadingLevel() {
 
@@ -989,30 +1279,32 @@ void loadingLevel() {
    
    
    */
-
+  reloadArrayList();
+  skyCol = color(random(1, 255), random(1, 255), random(1, 255));
+  mountainCol = color(random(1, 255), random(1, 255), random(1, 255));
   resetPlayerAmmo();
   levelTimer = 0;
   bonusTimer = 0;
 
-  amountOfMissiles = amountOfMissiles + (2 * level);
+  amountOfMissiles = amountOfMissiles + 1;
   if (amountOfMissiles > 30) {
     amountOfMissiles = 30;
   }
-  if (level % 2 == 0) {
-    speedRange++;
-  }
+
+  speedRange += 0.2;
   if (speedRange > maxSpeed) {
     // Limits the speed range to go above max speed for the game.
-    speedRange--;
+    speedRange = maxSpeed;
   }
-  addMissile(amountOfMissiles, Timer, speedRange);
+  println(speedRange);
+  addMissile(amountOfMissiles, Timer, floor(speedRange));
   state = 3;
 }
 
-void freshGame() {
+void gameSetup() {
 
   // Set at game start or on reset
-  player = new Cannon(int(width/2), int((height/8)*5));
+  player = new Cannon(int(width/2 +5), 881);
   missiles = new ArrayList<Missile>();
   bombs = new ArrayList<Bomb>();
   targets = new ArrayList<circleTarget>();
@@ -1022,6 +1314,7 @@ void freshGame() {
   citiesClone = new ArrayList<City>();
   midGameScore =  new ArrayList<Score>();
   bonusTimer = 0;
+  globalScore = 0;
 
 
   Timer = 1000;
@@ -1040,59 +1333,87 @@ void playingLevel() {
   drawGameObjects();
   player.update(true);
 
-
   levelTimer++;
 
   if (smartBallisticMissiles.size() < 1 && ballisticMissiles.size() < 1) {
-    citiesClone = new ArrayList<City>(cities);
-    ballisticMissiles = new ArrayList<BallisticMissile>();
-    smartBallisticMissiles = new ArrayList<SmartBallisticMissile>();
-    missiles = new ArrayList<Missile>();
-    bombs = new ArrayList<Bomb>();
+    reloadArrayList();
     state = 4;
   }
-  // if player hasnt died and missile arraylist is 0 then move onto points tallying.
+
+  if (gameOver()) {
+
+
+    state = 5;
+    reloadArrayList();
+  }
 }
 
 void deathScreen() {
 
 
-  for (int i = 0; i < 1000; i++) {
-  }
-  state = 0;
-}
+  fill(255, 200);
+  textSize(32);
+  text("You lost!", width/2-75, height/2 - 100);
+  text("Your score was: "+ globalScore, width/2 - 125, height/2-50);
+  text("You made it to level: " + level, width/2 - 175, height/2 );
+  text("Press 'r'  to go again or 'f' to rage quit", width/2 - 275, height/2+ 50);
 
+  if (keyPressed) {
 
-void keyReleased() {
-
-
-  if (key == 'x') {
-    state = 2;
-    citiesClone = new ArrayList<City>(cities);
-    ballisticMissiles = new ArrayList<BallisticMissile>();
-    missiles = new ArrayList<Missile>();
-    bombs = new ArrayList<Bomb>();
-    midGameScore = new ArrayList<Score>();
-    level += 1;
+    if (key == 'r') {
+      state = 0;
+    } else if (key == 'f') {
+      exit();
+    }
   }
 }
 
+void startScreen() {
+  rectMode(CORNER);
+  fill(255, 200);
+  textSize(32);
+  fill(mountainCol);
+  float third = height/3;
+  rect(0, 0, width, third);
+  rect(0, third*2, width, third);
+  fill(skyCol);
+  rect(0, third, width, third);
+  rectMode(CENTER);
+
+  fill(255, 220);
+  text("Welcome to the JANK Missile Command Game", width/2-350, height/2 - 100);
+  text("You are tasked with defending the cities and if they fall,", width/2 - 475, height/2-50);
+  text("all will be lost! The controls are simple. Aim your Cannon with", width/2 - 475, height/2+ 0);
+  text("the mouse, send out a missile with the left mouse button.", width/2 - 475, height/2+50 );
+  text("Good luck, when you are ready hit 'y'.", width/2 - 300, height/2+ 100);
+
+  if (keyPressed && key == 'y') {
+    state = 1;
+  }
+}
+
+void reloadArrayList() {
+  citiesClone = new ArrayList<City>(cities);
+  ballisticMissiles = new ArrayList<BallisticMissile>();
+  smartBallisticMissiles = new ArrayList<SmartBallisticMissile>();
+  missiles = new ArrayList<Missile>();
+  bombs = new ArrayList<Bomb>();
+}
 
 void drawGameObjects() {
 
   // background
-  rectMode(CORNER);
-  fill(255);
-  rect(0, 0, width, height);
   rectMode(CENTER); // just for everything else, but should relocate this call.
+
+  displayingCities();
 
   if (ballisticMissiles.size() > 0) {
     displayingBallisticMissiles();
     destructionBallisticMissiles();
     strokeWeight(1);
   }
-  
-  
+
+
 
   if (smartBallisticMissiles.size() > 0) {
     displayingSmartBallisticMissiles();
@@ -1109,44 +1430,12 @@ void drawGameObjects() {
     destructionOfBombs();
   }
 
-
-  displayingCities();
-
-  drawingAmmo(100, 100, player.currentAmmo, 25);
-  drawingClips(100, 150, player.ammoClips, 25);
+  drawingAmmo(width/2 - 30, 940, player.currentAmmo, 25);
+  drawingClips(100, 950, player.ammoClips, 25);
 
   displayScore("Score:", globalScore, 500, 50);
   handlingScore();
 }
-
-
-
-
-
-/*
--------------------------------------------------------------------------
- Global Variables
- -------------------------------------------------------------------------
- */
-
-
-Cannon player;
-int generalWidth, generalHeight;
-ArrayList<Missile> missiles;
-ArrayList<Bomb> bombs;
-ArrayList<circleTarget> targets;
-ArrayList<BallisticMissile> ballisticMissiles;
-ArrayList<SmartBallisticMissile> smartBallisticMissiles;
-ArrayList<City> cities;
-ArrayList<City> citiesClone;
-ArrayList<Score> midGameScore;
-int globalScore = 0;
-int levelTimer = 0;
-int state, Timer, amountOfMissiles, speedRange, level, maxSpeed, bonusTimer;
-color[] colour = {0xFFa81ee1, 0xFF2f8cd0, 0xFF4cb390, 0xFFbcbb43, 0xFF82857a};
-
-
-
 
 
 void setup() {
@@ -1155,23 +1444,14 @@ void setup() {
   size(1000, 1000);
   generalWidth = int(width / 64);
   generalHeight = int(height / 64);
-
+  skyCol = color(random(1, 255), random(1, 255), random(1, 255));
+  mountainCol = color(random(1, 255), random(1, 255), random(1, 255));
   noCursor();
-
-
-  // Set at level start;
-
-
-
 
   state = 0;
 }
 
 
 void draw() {
-
-
-
-
   gamePathway();
 }
