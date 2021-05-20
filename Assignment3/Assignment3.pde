@@ -229,8 +229,8 @@ class Missile {
     /*
     test function for seeing where the missile should stop at.
      
-    return: void
-    */
+     return: void
+     */
 
     line(location.x, location.y, destination.x, destination.y);
   }
@@ -238,10 +238,10 @@ class Missile {
   void move() {
     /*
     Adds the direction to the Missile to move it in the direction
-    of the destination.
-    
-    return: void
-    */
+     of the destination.
+     
+     return: void
+     */
 
     location.add(direction);
   }
@@ -249,10 +249,10 @@ class Missile {
   void drawMissile() {
     /*
     Draws the sprite for the Missile, giving it the colour
-    of the mountain background.
-    
-    return: void
-    */
+     of the mountain background.
+     
+     return: void
+     */
     strokeWeight(5);
     stroke(0);
     fill(mountainCol);
@@ -280,25 +280,25 @@ class Missile {
 class Score {
   /*
   The Score class creates a object that allows for text to be shown on screen
-  for a duration of time. Used for when Ballistic Missiles are destoried.
-  
-  paramters:
-    - remove: boolean > 
-    For checking if the object should be removed
-    - aliveTime: int > 
-    Keeps track of how long the object has been in the game for
-    - s: String >
-    The string that will be displayed for this object
-    - x: float >
-    x position in the game
-    - y: float >
-    y position in the game
-    - score: int >
-    The amount of score that has been awarded to be added to the string
-    
-  
-  
-  */
+   for a duration of time. Used for when Ballistic Missiles are destoried.
+   
+   paramters:
+   - remove: boolean > 
+   For checking if the object should be removed
+   - aliveTime: int > 
+   Keeps track of how long the object has been in the game for
+   - s: String >
+   The string that will be displayed for this object
+   - x: float >
+   x position in the game
+   - y: float >
+   y position in the game
+   - score: int >
+   The amount of score that has been awarded to be added to the string
+   
+   
+   
+   */
 
   boolean remove;
   int aliveTime;
@@ -317,11 +317,11 @@ class Score {
   void update() {
     /*
     Checks whether the object has been around for 100 frame and if so
-    flags it for removable. Draws the object to the game and increments
-    the aliveTime.
-    
-    return: void
-    */
+     flags it for removal. Draws the object to the game and increments
+     the aliveTime.
+     
+     return: void
+     */
     if (aliveTime == 100) {
       remove = true;
     }
@@ -334,7 +334,7 @@ class Cannon {
 
   /*
   The Cannon class handles the 
-  
+   
    
    */
 
@@ -725,6 +725,13 @@ class SmartBallisticMissile extends BallisticMissile {
 
 
 boolean detectHitCirlce(float[] circle1, float[] circle2) {
+  /*
+  Checks if two circles are touching.
+  each Array should consist of
+  X, Y, Diameter
+  
+  return: boolean
+  */
 
   float dx = circle1[0] - circle2[0];
   float dy = circle1[1] - circle2[1];
@@ -739,6 +746,19 @@ boolean detectHitCirlce(float[] circle1, float[] circle2) {
 }
 
 boolean detectHitRect(float[] rect1, float[] rect2) {
+  /*
+  Checks if two rectangle are touching.
+  each Array given should consist of an
+  X, Y, Width, Height variable
+  
+  arguments:
+  - rect1: float Array >
+  the first rectangle
+  - rect2: float Array >
+  the second rectangle
+  
+  return: boolean
+  */
   if (rect1[0] < rect2[0] + rect2[2] &&
     rect1[0] + rect1[2] > rect2[0] &&
     rect1[1] < rect2[1] + rect2[3] &&
@@ -758,6 +778,11 @@ boolean detectHitRect(float[] rect1, float[] rect2) {
  
  */
 void drawSky(int skyHeight, int skyWidth) {
+  /*
+  Draws the Sky part of the background
+  
+  return: void
+  */
   noStroke();
   fill(skyCol);
   rectMode(CORNER);
@@ -766,6 +791,11 @@ void drawSky(int skyHeight, int skyWidth) {
 }
 // Draws mountains with random colour values
 void drawMountains() {
+  /*
+  draws the mountain part of the background
+  
+  return: void
+  */
   rectMode(CORNER);
   fill(mountainCol);
   rect(0, height - 75, width, 75); // Floor base
@@ -785,6 +815,17 @@ void drawMountains() {
 }
 // Draw cities, fixed colour
 void drawCities(float x, float y) {
+  /*
+  Draws the City sprite at the position given and is used
+  for the City object as it sprite
+  
+  arguments:
+  - x: float >
+  x location in the game
+  - y: float >
+  y location in the game
+  
+  */
   rectMode(CORNER);
   noStroke();
   fill(255);
@@ -846,7 +887,8 @@ void displayingMissile() {
 
 void destructionOfMissiles() {
   /*
-  checks whether any of the missiles are ok to destroy
+  checks whether any of the missiles have been flagged for deletion
+  and if so removes them from the Array List
    
    return: void
    */
@@ -907,7 +949,8 @@ void displayingBomb() {
 
 void destructionOfBombs() {
   /*
-  checks whether any of the missiles are ok to destroy
+  Goes though all the Bomb objects and jects if they have
+  been flagged for removal
    
    return: void
    */
@@ -932,6 +975,17 @@ void createTargets() {
 }
 
 void displayingBallisticMissiles() {
+  /*
+  Goes though all the Ballistic Missile Objects and runs the 
+  update function.
+  
+  It also checks The hit detection between itself and the other 
+  City objects. If a hit was detected it flags itself for deletion
+  and the city for death animation.
+  
+  
+  return void
+  */
   BallisticMissile temp;
   City tempCity;
   for (int i = 0; i< ballisticMissiles.size(); i++) {
@@ -954,6 +1008,12 @@ void displayingBallisticMissiles() {
 }
 
 void destructionBallisticMissiles() {
+  /*
+  Checks whether a Ballistic Missile has been flagged for
+  removal and if it is removes it from the Array List
+  
+  return void
+  */
 
   BallisticMissile temp;
   for (int i = ballisticMissiles.size()-1; i >= 0; i--) {
@@ -967,6 +1027,17 @@ void destructionBallisticMissiles() {
 
 
 void displayingSmartBallisticMissiles() {
+  /*
+  Goes though all the Smart Ballistic Missile Objects and runs the 
+  update function.
+  
+  It also checks The hit detection between itself and the other 
+  City objects. If a hit was detected it flags itself for deletion
+  and the city for death animation.
+  
+  
+  return void
+  */
   SmartBallisticMissile temp;
   City tempCity;
   for (int i = 0; i< smartBallisticMissiles.size(); i++) {
@@ -975,7 +1046,6 @@ void displayingSmartBallisticMissiles() {
       temp.spawn = true;
     }
     for (int x = 0; x< cities.size(); x++) {
-
       tempCity = cities.get(x);
       if (tempCity.alive == true) {
         if (detectHitRect(temp.boundingBox, tempCity.boundingBox)) {
@@ -1001,6 +1071,13 @@ void destructionSmartBallisticMissiles() {
 }
 
 void displayingCities() {
+  /*
+  Goes though all the City Objects within the cities Array List
+  and runs the update function
+  
+  
+  return void
+  */
 
   City temp;
   for (int i = 0; i< cities.size(); i++) {
@@ -1011,6 +1088,15 @@ void displayingCities() {
 
 
 void handlingScore() {
+  /*
+  Goes though all the Score Objects within the cities Array List
+  and runs the update function
+  
+  Also checks if A score object has been flagged for removal and
+  if so removes it from the Array List
+  
+  return void
+  */
 
   Score temp;
   for (int i = 0; i < midGameScore.size(); i++) {
@@ -1030,23 +1116,20 @@ void handlingScore() {
 void drawingAmmo(int xPos, int yPos, int ammo, int spacing) {
 
 
+  
+
+  /*
+  
+  Draws the player amount of Ammo to the screen in a cascading 
+  way like a pyramid.
+   
+   
+   return: void
+   */
+   
   int internalX, startLoop;
 
   startLoop = 4;
-
-  //TODO
-  // Clips, might put in its own Function.
-
-
-  // draw ammo with a for loop?
-  /*
-  ------setup-----
-   *
-   * *
-   * * *
-   * * * *
-   
-   */
 
   fill(skyCol);
   for (int stack_height = 0; stack_height < 4; stack_height++) {
@@ -1073,6 +1156,12 @@ void resetPlayerAmmo() {
 }
 
 void drawingClips(int xPos, int yPos, int clips, int spacing) {
+  /*
+  Draws the Clips sprite to the screen
+  
+  
+  return: void
+  */
 
   for (int i = 0; i < clips; i++) {
     rect(xPos, yPos, 10, 10);
@@ -1098,6 +1187,19 @@ boolean testLength(PVector One, PVector Two, int epsilon) {
 
 
 void addMissile( int amount, int time, int _speed) {
+  /*
+  initalizes the missiles for the level and places them in
+  the ballisticMissiles ArrayList.
+  
+  arguments:
+    - amount: int >
+    The amount of Ballistic Missiles to be created
+    - time: int >
+    The time in which the missile will spawn during the level
+    - _speed: int >
+    the speed for the BallisticMissile
+  
+  */
   for (int i = 0; i < amount; i++) {
     ballisticMissiles.add(new BallisticMissile(time, _speed));
   }
@@ -1111,7 +1213,11 @@ void addMissile( int amount, int time, int _speed) {
 
 
 float calulateAngles() {
-  // come back and try and achieve a different max angle depending on the closeness of the missile to the centre of the screen.
+  /*
+  gives a angleBetween minAngle and maxAngle
+  
+  return: float
+  */
 
   float minAngle = 0;
   float maxAngle = 55;
@@ -1122,6 +1228,10 @@ float calulateAngles() {
 void populateCities() {
 
   // initializes all of the city objects at the start of the game.
+  // at a increasing x position 
+  
+  // return: void
+  
   PVector tempLocation;
 
   for (int i = 100; i < 950; i += 100) {
@@ -1135,6 +1245,13 @@ void populateCities() {
 
 
 boolean gameOver() {
+  /*
+  
+  Checks if there are any City objects alive,
+  If there are returns true if not returns false.
+  
+  return: boolean
+  */
   int counter = 0;
   City temp;
   for (int i = 0; i < cities.size(); i++) {
@@ -1154,7 +1271,12 @@ boolean gameOver() {
 
 
 void reviveCity() {
-
+  /*
+  Called at the start of a level and randomly revives a
+  City
+  
+  return: void
+  */
   int city = floor(random(5.1));
   City temp = cities.get(city);
   temp.alive = true;
@@ -1172,6 +1294,20 @@ void reviveCity() {
 
 
 void displayScore(String _text, int score, float x, float y) {
+  /*
+  Displaies a text object onto the screen.
+   Arguments:
+   - _text: String >
+   The string that will be attached to the score that will be displayed
+   on the screen.
+   - score: int >
+   The score that will be displayed.
+   - x: float >
+   x position on the screen.
+   - f: float >
+   y position on the screen.
+   
+   */
   fill(0);
   textSize(24);
   text((_text + score), x, y);
@@ -1179,6 +1315,12 @@ void displayScore(String _text, int score, float x, float y) {
 
 
 void addScore(int score) {
+  /*
+  Adds the paramter int to the globalScore
+   
+   
+   return void
+   */
   globalScore += score;
 }
 
@@ -1186,12 +1328,13 @@ void addScore(int score) {
 void bounsScore() {
 
   /*
-    TODO: this function will loop though everything adding score for all of the bonuses
-   at the end of the level (Cities alive, ammo left over), while redrawing and adding
-   a delay;
+    Goes though all the Player ammo and City and grants extra
+    bonus score for each one left at the end of the level. giving
+    a delay inbetween and changing the state to 2 when there are no
+    ammo or cities left.
    
    
-   return: int
+   return: void
    */
 
 
@@ -1223,7 +1366,7 @@ void bounsScore() {
     return;
   }
 
-  // finished will bonus 
+  // finished with the bonus 
   level += 1;
   state = 2;
 }
@@ -1246,6 +1389,14 @@ void bounsScore() {
 
 
 void gamePathway() {
+  /*
+  A state machinge that
+   Controls the flow of the game depending on the 'state' variable
+   
+   return: void
+   */
+
+
   drawBackground();
 
 
@@ -1272,10 +1423,13 @@ void gamePathway() {
 void loadingLevel() {
 
   /*
-  
-   Things that need to happen on loading a level
-   depending on the difficulty the player will have less time,
-   more rockets and a faster top speed;
+  Gets everything ready for the next level.
+   
+   >Refreshs the ArrayList of some objects
+   >selects new colours for the background.
+   >Refreshes the players ammo
+   >Sets the amount and speed of missiles
+   >Sets the state of the game to 3
    
    
    */
@@ -1302,8 +1456,14 @@ void loadingLevel() {
 }
 
 void gameSetup() {
-
-  // Set at game start or on reset
+  /*
+  The games Setup function so that we can load
+   the variables after the start screen. The start
+   settings of the game and be can be changed here.
+   
+   sets the state of the game to 2
+   return: void
+   */
   player = new Cannon(int(width/2 +5), 881);
   missiles = new ArrayList<Missile>();
   bombs = new ArrayList<Bomb>();
@@ -1349,7 +1509,14 @@ void playingLevel() {
 }
 
 void deathScreen() {
-
+  /*
+  The Death screen of the game shown when a player
+   has lost all the cities, shows the Stats for the game and
+   allows the player to quite or retry with 'f' or 'r' 
+   repectfully
+   
+   return: void
+   */
 
   fill(255, 200);
   textSize(32);
@@ -1369,6 +1536,14 @@ void deathScreen() {
 }
 
 void startScreen() {
+  /*
+  A simple start screen for the game that gives the player
+   a little animation and can be bypassed by pressing the 'y'
+   keyboard key
+   
+   sets state = 1
+   return: void
+   */
   rectMode(CORNER);
   fill(255, 200);
   textSize(32);
@@ -1393,6 +1568,12 @@ void startScreen() {
 }
 
 void reloadArrayList() {
+  /*
+  Resets some of the ArrayList of the game so that
+   objects arent transfered across levels.
+   
+   return: void
+   */
   citiesClone = new ArrayList<City>(cities);
   ballisticMissiles = new ArrayList<BallisticMissile>();
   smartBallisticMissiles = new ArrayList<SmartBallisticMissile>();
@@ -1401,8 +1582,12 @@ void reloadArrayList() {
 }
 
 void drawGameObjects() {
-
-  // background
+  /*
+  Draws the assets of the game to the screen and also
+   checks if objects need to be removed.
+   
+   return: void
+   */
   rectMode(CENTER); // just for everything else, but should relocate this call.
 
   displayingCities();
@@ -1439,7 +1624,12 @@ void drawGameObjects() {
 
 
 void setup() {
-
+  /*
+  The setup of the program with some of the starting variables need
+   There is a later function that will initialize other variables.
+   
+   return: void
+   */
 
   size(1000, 1000);
   generalWidth = int(width / 64);
@@ -1453,5 +1643,9 @@ void setup() {
 
 
 void draw() {
+  /*
+  Main loop of the game simply runs the gamePathway function
+   to see which way the program should run.
+   */
   gamePathway();
 }
