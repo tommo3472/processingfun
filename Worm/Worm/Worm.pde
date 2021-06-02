@@ -125,13 +125,6 @@ class WorldEater{
     new to find the angle of the target
     
     
-    angle = arccos[
-    ((x2 - x1) * (x4 - x3) + 
-    (y2 - y1) * (y4 - y3)) /
-    (√((x2 - x1)2 + (y2 - y1)2) *
-    √((x4 - x3)2 + (y4 - y3)2))
-    ]
-    
     */
     
     destination = findPointOnCircle(location, radians(angle), 30);
@@ -153,13 +146,7 @@ class WorldEater{
     angleToTarget = PVector.angleBetween(targetLocation, location);
     if (targetLocation.y <= location.y) { angleToTarget = angleToTarget; } else { angleToTarget = angleToTarget + 2*(PI-angleToTarget); }
     println(int(degrees(angleToTarget)));
-    
-    
-    
 
-    
-   
-    
   }
   
   void gravity(){
@@ -250,6 +237,24 @@ void WorldStuff(WorldEater a){
   
 }
 
+void detectHit(WorldEater temp){
+  
+  for(int i = 0; i< ground.length; i++){
+    if(detectHitRect(temp.box, ground[i].box)){
+      temp.ground = true;
+    }
+    ground[i].drawSprite();
+  }
+  
+  if(temp.ground){
+    temp.findDirection();
+  } else {
+    temp.gravity();
+  }
+  temp.ground = false;
+  
+}
+
 WorldEater b;
 WorldEater c;
 WorldEater d;
@@ -275,21 +280,16 @@ void draw(){
   background(255);
   
   
-  for(int i = 0; i< ground.length; i++){
-    if(detectHitRect(e.box, ground[i].box)){
-      e.ground = true;
-    }
-    ground[i].drawSprite();
-  }
   
-  if(e.ground){
-    e.findDirection();
-  } else {
-    e.gravity();
-  }
-  e.ground = false;
+  
+  
+  
   target.drawSprite();
   target.moveWithMouse();
+  detectHit(b);
+  detectHit(c);
+  detectHit(d);
+  detectHit(e);
   WorldStuff(b);
   WorldStuff(c);
   WorldStuff(d);
